@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Fill-in-the-Blanks Quiz</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { font-family: 'Nunito', -apple-system, sans-serif; background-color: #f8fafc; }
+    .blank-input {
+      border: none;
+      border-bottom: 2px solid #94a3b8;
+      background-color: transparent;
+      outline: none;
+      text-align: center;
+      font-weight: 700;
+      color: #1e40af;
+      padding: 0 4px;
+      margin: 0 4px;
+      width: 150px;
+      transition: all 0.2s;
+    }
+    .blank-input:focus {
+      border-bottom-color: #2563eb;
+      background-color: #eff6ff;
+    }
+    .blank-input.correct {
+      border-bottom-color: #22c55e;
+      color: #15803d;
+    }
+    .blank-input.incorrect {
+      border-bottom-color: #ef4444;
+      color: #b91c1c;
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Vocabulary Data (Cleaned, deduplicated, lowercased, and tailored for 4th/5th grade ELL)
+    const rawVocabList = [
+      { word: "investigate", sentence: "Police officers ___ the crime scene to find out what happened." },
+      { word: "survey", sentence: "We asked ten people to answer our ___ about their favorite animals." },
+      { word: "research", sentence: "Scientists do ___ to discover new facts about outer space." },
+      { word: "record", sentence: "Use your notebook to ___ the temperature every morning." },
+      { word: "collect", sentence: "Bees fly from flower to flower to ___ sweet nectar." },
+      { word: "evidence", sentence: "Footprints on the floor are good ___ that someone was in the room." },
+      { word: "data", sentence: "After counting the cars, we put the numbers and ___ into a table." },
+      { word: "result", sentence: "The ___ of the soccer game was a 2-2 tie." },
+      { word: "conclusion", sentence: "At the end of your report, write a ___ to summarize your thoughts." },
+      { word: "reason", sentence: "What is the ___ you are late for school today?" },
+      { word: "source", sentence: "The sun is the main ___ of light and heat for our planet." },
+      { word: "explain", sentence: "Can you ___ how to solve this math problem step by step?" },
+      { word: "predict", sentence: "I look at the dark clouds and ___ that it will rain very soon." },
+      { word: "refer to", sentence: "If you do not know the word, please ___ the dictionary." },
+      { word: "define", sentence: "A dictionary is a book used to ___ what words mean." },
+      { word: "cause", sentence: "A tiny virus is the ___ of your cold and sore throat." },
+      { word: "effect", sentence: "The medicine had a good ___ and made me feel better quickly." },
+      { word: "affect", sentence: "The cold weather will ___ how the plants grow in the garden." },
+      { word: "impact", sentence: "The loud noise had a big ___ on my ability to study quietly." },
+      { word: "influence", sentence: "Good friends can ___ the choices you make every day." },
+      { word: "structure", sentence: "The bridge has a strong metal ___ to hold heavy cars." },
+      { word: "environment", sentence: "We must recycle plastic to protect our natural ___." },
+      { word: "observe", sentence: "We use a telescope to ___ the stars shining at night." },
+      { word: "notice", sentence: "Did you ___ that she was wearing a new blue shirt today?" },
+      { word: "describe", sentence: "Please ___ what the lost dog looks like so we can find it." },
+      { word: "compare", sentence: "Let's ___ the two apples to see which one is bigger." },
+      { word: "contrast", sentence: "If you ___ summer and winter, you will see they are complete opposites." },
+      { word: "classify", sentence: "We can ___ animals into groups like mammals, birds, and fish." },
+      { word: "identify", sentence: "Can you ___ the person who left their jacket on the chair?" },
+      { word: "process", sentence: "Baking a delicious cake is a fun ___ that takes about an hour." },
+      { word: "experiment", sentence: "We mixed baking soda and vinegar for our science ___." },
+      { word: "conduct", sentence: "The class will ___ a test to find out which paper towel is strongest." },
+      { word: "measure", sentence: "Use a long ruler to ___ how wide the desk is." },
+      { word: "element", sentence: "Water is a very important ___ for all living things to survive." },
+      { word: "factor", sentence: "Studying hard is a key ___ in getting good grades on a test." },
+      { word: "relationship", sentence: "The dog and the cat have a friendly ___ and play together safely." },
+      { word: "increase", sentence: "The number of students will ___ when the new kids join our class." },
+      { word: "decrease", sentence: "The temperature will ___ and get much colder tonight." },
+      { word: "similar", sentence: "The two sisters look very ___ and have the exact same eyes." },
+      { word: "different", sentence: "A square and a circle are two very ___ shapes." },
+      { word: "communication", sentence: "Talking on the telephone is a common way of ___." },
+      { word: "representation", sentence: "The drawing on the map is a ___ of a real mountain." },
+      { word: "chart", sentence: "Look at the pie ___ to see how many people like pizza." },
+      { word: "graph", sentence: "The line ___ shows how the plant grew taller over time." },
+      { word: "diagram", sentence: "Draw a ___ with labels to show the parts of a plant cell." },
+      { word: "model", sentence: "The teacher showed us a plastic ___ of the human heart." },
+      { word: "demonstrate", sentence: "The chef will ___ how to chop vegetables safely before we try." },
+      { word: "summarize", sentence: "Read the long story and then ___ it in three short sentences." },
+      { word: "infer", sentence: "If someone is crying, you can ___ that they are feeling sad." },
+      { word: "characteristic", sentence: "A long grey trunk is a special ___ of an elephant." },
+      { word: "feature", sentence: "The new phone has a cool camera ___ for taking better pictures." },
+      { word: "property", sentence: "Being very hard is a physical ___ of a rock." },
+      { word: "function", sentence: "The main ___ of the heart is to pump blood through the body." },
+      { word: "variety", sentence: "The big supermarket sells a wide ___ of fresh fruits and vegetables." },
+      { word: "analyze", sentence: "The scientist will ___ the soil to see what minerals are inside it." },
+      { word: "examine", sentence: "The doctor will ___ your throat closely to see if it is red." },
+      { word: "evaluate", sentence: "The teacher will ___ your project and give you a grade." },
+      { word: "represent", sentence: "The red color on the map can ___ hot weather areas." },
+      { word: "organize", sentence: "Please clean and ___ your messy desk before you go home." },
+      { word: "period", sentence: "Dinosaurs lived on Earth during a very long time ___." },
+      { word: "region", sentence: "Penguins live in a very cold ___ of the world near the South Pole." },
+      { word: "system", sentence: "Our solar ___ includes the sun and eight planets moving around it." },
+      { word: "quantity", sentence: "We need a large ___ of water to fill the big swimming pool." },
+      { word: "quality", sentence: "This expensive jacket is made of very high ___ materials." },
+      { word: "amount", sentence: "Please add a small ___ of sugar to the tea to make it sweet." }
+    ];
+
+    // Helper: Shuffle Array
+    const shuffle = (array) => {
+      let arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    function App() {
+      // Core States
+      const [learningList, setLearningList] = useState([]);
+      const [mistakesQueue, setMistakesQueue] = useState([]);
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [isDone, setIsDone] = useState(false);
+      const [round, setRound] = useState(1);
+
+      // Current Batch States
+      const [currentBatchWords, setCurrentBatchWords] = useState([]);
+      const [currentSentences, setCurrentSentences] = useState([]);
+      
+      // User Interaction States
+      const [answers, setAnswers] = useState({});
+      const [hasChecked, setHasChecked] = useState(false);
+
+      // Initialization: Shuffle raw words on first load
+      useEffect(() => {
+        setLearningList(shuffle(rawVocabList));
+      }, []);
+
+      // Extract current batch of 5 words and shuffle their sentences
+      useEffect(() => {
+        if (learningList.length === 0) return;
+        
+        const batch = learningList.slice(currentIndex, currentIndex + 5);
+        // Sort word bank alphabetically for a cleaner look
+        setCurrentBatchWords(batch.map(item => item.word).sort()); 
+        
+        // Shuffle the sentence order so they don't match the word bank perfectly
+        setCurrentSentences(shuffle(batch));
+        
+        setAnswers({});
+        setHasChecked(false);
+      }, [learningList, currentIndex]);
+
+      const handleInputChange = (word, value) => {
+        if (hasChecked) return; // Prevent changing after checking
+        setAnswers(prev => ({ ...prev, [word]: value }));
+      };
+
+      const handleCheck = () => {
+        let currentMistakes = [];
+        
+        currentSentences.forEach(item => {
+          const userAnswer = (answers[item.word] || "").trim().toLowerCase();
+          const isCorrect = userAnswer === item.word;
+          
+          if (!isCorrect) {
+            currentMistakes.push(item);
+          }
+        });
+
+        // Add to global mistakes queue avoiding duplicates
+        setMistakesQueue(prev => {
+          const newQueue = [...prev];
+          currentMistakes.forEach(mistake => {
+            if (!newQueue.find(w => w.word === mistake.word)) {
+              newQueue.push(mistake);
+            }
+          });
+          return newQueue;
+        });
+
+        setHasChecked(true);
+      };
+
+      const handleNext = () => {
+        const nextIndex = currentIndex + 5;
+        
+        if (nextIndex < learningList.length) {
+          // Go to next batch
+          setCurrentIndex(nextIndex);
+          window.scrollTo(0, 0);
+        } else {
+          // Reached end of current list
+          if (mistakesQueue.length > 0) {
+            // Start a new review round with mistakes
+            setLearningList(shuffle([...mistakesQueue]));
+            setMistakesQueue([]);
+            setCurrentIndex(0);
+            setRound(prev => prev + 1);
+            window.scrollTo(0, 0);
+          } else {
+            // Absolutely everything is correct!
+            setIsDone(true);
+          }
+        }
+      };
+
+      const handleRestart = () => {
+        setLearningList(shuffle(rawVocabList));
+        setMistakesQueue([]);
+        setCurrentIndex(0);
+        setIsDone(false);
+        setRound(1);
+      };
+
+      if (learningList.length === 0) return <div className="p-8 text-center text-slate-500">Loading words...</div>;
+
+      if (isDone) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-green-50 p-6">
+            <div className="text-6xl mb-6">🏆</div>
+            <h1 className="text-4xl font-extrabold text-green-700 mb-4">Congratulations!</h1>
+            <p className="text-xl text-green-600 mb-8 font-medium">You have successfully mastered all the words.</p>
+            <button 
+              onClick={handleRestart}
+              className="px-8 py-4 bg-green-600 text-white rounded-xl shadow-lg hover:bg-green-700 transition font-bold text-lg"
+            >
+              Start Over
+            </button>
+          </div>
+        );
+      }
+
+      const totalBatches = Math.ceil(learningList.length / 5);
+      const currentBatchNum = Math.floor(currentIndex / 5) + 1;
+
+      return (
+        <div className="max-w-4xl mx-auto p-4 sm:p-8">
+          
+          {/* Header & Progress */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-2">Vocabulary Practice</h1>
+            <p className="text-slate-500 font-medium text-lg">
+              {round > 1 
+                ? <span className="text-orange-600 font-bold">Review Round {round}: Practice the words you missed!</span>
+                : "Type the correct word from the Word Bank into each blank."}
+            </p>
+            
+            <div className="mt-6 flex items-center justify-center gap-4 text-sm font-bold text-slate-400 uppercase tracking-widest">
+              <span>Set {currentBatchNum} of {totalBatches}</span>
+              <span>•</span>
+              <span>Words {currentIndex + 1} to {Math.min(currentIndex + 5, learningList.length)}</span>
+            </div>
+            
+            <div className="w-full bg-slate-200 h-2 rounded-full mt-4 overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-500 ease-out ${round > 1 ? 'bg-orange-500' : 'bg-blue-600'}`}
+                style={{ width: `${((currentBatchNum) / totalBatches) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Word Bank */}
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-slate-200 p-6 mb-8 text-center">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Word Bank</h2>
+            <div className="flex flex-wrap justify-center gap-3">
+              {currentBatchWords.map((word, idx) => {
+                // Determine if word is used (for visual feedback)
+                const isUsed = Object.values(answers).some(val => val.trim().toLowerCase() === word);
+                return (
+                  <span 
+                    key={idx} 
+                    className={`px-4 py-2 rounded-lg font-bold text-lg border-2 transition ${isUsed ? 'bg-slate-100 text-slate-400 border-slate-100' : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'}`}
+                  >
+                    {word}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sentences */}
+          <div className="space-y-6 mb-8">
+            {currentSentences.map((item, idx) => {
+              const parts = item.sentence.split('___');
+              const userAnswer = (answers[item.word] || "").trim().toLowerCase();
+              const isCorrect = userAnswer === item.word;
+              
+              let inputClass = "blank-input";
+              if (hasChecked) {
+                inputClass += isCorrect ? " correct" : " incorrect";
+              }
+
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 text-lg sm:text-xl leading-relaxed text-slate-700">
+                  <span className="font-bold text-slate-300 mr-3">{idx + 1}.</span>
+                  {parts[0]}
+                  <input 
+                    type="text" 
+                    className={inputClass}
+                    value={answers[item.word] || ""}
+                    onChange={(e) => handleInputChange(item.word, e.target.value)}
+                    disabled={hasChecked}
+                    spellCheck="false"
+                    autoComplete="off"
+                  />
+                  {parts[1]}
+                  
+                  {/* Feedback Icon & Correction */}
+                  {hasChecked && (
+                    <div className="mt-4 text-base bg-slate-50 p-3 rounded-xl">
+                      {isCorrect ? (
+                        <span className="text-green-600 font-bold flex items-center gap-2">
+                          ✅ Correct!
+                        </span>
+                      ) : (
+                        <span className="text-red-600 font-bold flex items-center gap-2">
+                          ❌ Correct Answer: <span className="text-slate-800 underline decoration-red-400 decoration-2 tracking-wide ml-1">{item.word}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center mb-12">
+            {!hasChecked ? (
+              <button 
+                onClick={handleCheck}
+                className="px-8 py-4 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 transition font-bold text-xl w-full sm:w-auto"
+              >
+                Check Answers
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext}
+                className="px-8 py-4 bg-slate-800 text-white rounded-xl shadow-md hover:bg-slate-900 transition font-bold text-xl w-full sm:w-auto flex items-center justify-center gap-2"
+              >
+                Next Words ➔
+              </button>
+            )}
+          </div>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
